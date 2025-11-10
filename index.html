@@ -89,6 +89,32 @@
             transform: translateY(-2px);
         }
 
+        .btn-tertiary {
+            background: #9AEBA3;
+            color: #012030;
+        }
+
+        .btn-tertiary:hover {
+            background: #85d88e;
+            transform: translateY(-2px);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
         .palettes-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -256,16 +282,22 @@
     <div class="container">
         <header>
             <h1>Gestor de Paletas de Colores</h1>
-            <p class="subtitle">Crea y gestiona múltiples paletas de colores. Todos los datos se guardan localmente en
-                tu navegador.</p>
+            <p class="subtitle">Crea, importa y gestiona múltiples paletas de colores. Todos los datos se guardan
+                localmente en tu navegador.</p>
         </header>
 
         <div class="controls">
             <button id="addPaletteBtn" class="btn btn-primary">
                 <i>+</i> Nueva Paleta
             </button>
-            <button id="exportAllBtn" class="btn btn-secondary">
-                <i>↓</i> Exportar Todas las Paletas
+            <div class="file-input-wrapper">
+                <button class="btn btn-secondary">
+                    <i>📁</i> Importar Paleta
+                </button>
+                <input type="file" id="importFile" accept=".json">
+            </div>
+            <button id="exportAllBtn" class="btn btn-tertiary">
+                <i>↓</i> Exportar Todas
             </button>
         </div>
 
@@ -290,6 +322,7 @@
 
         const palettesContainer = document.getElementById('palettesContainer');
         const addPaletteBtn = document.getElementById('addPaletteBtn');
+        const importFile = document.getElementById('importFile');
         const exportAllBtn = document.getElementById('exportAllBtn');
         const notification = document.getElementById('notification');
 
@@ -488,6 +521,85 @@
             showNotification('Todas las paletas exportadas');
         }
 
+        // Función para importar paletas desde archivo JSON
+        function importPalettes(file) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    let importedPalettes = [];
+
+                    // Determinar si es una paleta individual o un array de paletas
+                    if (Array.isArray(importedData)) {
+                        importedPalettes = importedData;
+                    } else if (importedData.name && Array.isArray(importedData.colors)) {
+                        importedPalettes = [importedData];
+                    } else {
+                        throw new Error('Formato de archivo no válido');
+                    }
+
+                    // Procesar las paletas importadas
+                    importedPalettes.forEach(paletteData => {
+                        // Validar la paleta
+                        if (!paletteData.name || !Array.isArray(paletteData.colors)) {
+                            console.warn('Paleta inválida ignorada:', paletteData);
+                            return;
+                        }
+
+                        // Verificar si ya existe una paleta con el mismo nombre
+                        const existingIndex = palettes.findIndex(p => p.name === paletteData.name);
+
+                        if (existingIndex !== -1) {
+                            // Si existe, preguntar si reemplazar o renombrar
+                            const userChoice = confirm(
+                                `Ya existe una paleta llamada "${paletteData.name}". ¿Quieres reemplazarla? (Cancelar para crear una nueva con nombre diferente)`
+                            );
+
+                            if (userChoice) {
+                                // Reemplazar la paleta existente
+                                palettes[existingIndex].colors = paletteData.colors;
+                            } else {
+                                // Crear nueva paleta con nombre modificado
+                                let newName = paletteData.name;
+                                let counter = 1;
+                                while (palettes.some(p => p.name === newName)) {
+                                    newName = `${paletteData.name} (${counter})`;
+                                    counter++;
+                                }
+
+                                palettes.push({
+                                    id: nextPaletteId++,
+                                    name: newName,
+                                    colors: paletteData.colors
+                                });
+                            }
+                        } else {
+                            // Crear nueva paleta
+                            palettes.push({
+                                id: nextPaletteId++,
+                                name: paletteData.name,
+                                colors: paletteData.colors
+                            });
+                        }
+                    });
+
+                    renderPalettes();
+                    showNotification(`Importadas ${importedPalettes.length} paleta(s) correctamente`);
+
+                } catch (error) {
+                    console.error('Error al importar:', error);
+                    showNotification('Error al importar el archivo. Verifica el formato JSON.');
+                }
+            };
+
+            reader.onerror = function () {
+                showNotification('Error al leer el archivo');
+            };
+
+            reader.readAsText(file);
+        }
+
         // Event listeners globales
         addPaletteBtn.addEventListener('click', () => {
             const paletteName = prompt('Nombre de la nueva paleta:', `Paleta ${nextPaletteId}`);
@@ -500,6 +612,15 @@
                 renderPalettes();
                 showNotification('Nueva paleta creada');
             }
+        });
+
+        importFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                importPalettes(file);
+            }
+            // Resetear el input para permitir importar el mismo archivo otra vez
+            e.target.value = '';
         });
 
         exportAllBtn.addEventListener('click', exportAllPalettes);
