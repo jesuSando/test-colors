@@ -4,46 +4,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paleta de Colores</title>
+    <title>Gestor de Paletas de Colores</title>
     <style>
-        html,
-        body {
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #000000;
-            color: white;
-            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 20px;
             max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #45C4B0, #9AEBA3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #13678A;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0d4f6a;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #45C4B0;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #36a897;
+            transform: translateY(-2px);
+        }
+
+        .palettes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .palette {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .palette:hover {
+            transform: translateY(-5px);
+        }
+
+        .palette-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .palette-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .palette-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .palette-controls button {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+        }
+
+        .palette-controls button:hover {
+            color: #fff;
+        }
+
+        .colors-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .color {
-            height: 100px;
-            width: 100px;
+            height: 80px;
+            width: 80px;
+            border-radius: 10px;
             position: relative;
-            border-radius: 5px;
             transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .color:hover {
-            transform: scale(1.05);
+            transform: scale(1.1);
             z-index: 10;
         }
 
-        .copy-btn {
+        .color-actions {
             position: absolute;
             bottom: 5px;
             right: 5px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .color:hover .color-actions {
+            opacity: 1;
+        }
+
+        .color-actions button {
             background: rgba(0, 0, 0, 0.7);
             color: white;
             border: none;
@@ -51,38 +182,35 @@
             padding: 3px 6px;
             font-size: 10px;
             cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s;
         }
 
-        .color:hover .copy-btn {
-            opacity: 1;
-        }
-
-        .controls {
-            margin: 20px;
+        .add-color-form {
             display: flex;
             gap: 10px;
-            align-items: center;
+            margin-top: 15px;
         }
 
         .color-input {
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
         }
 
-        .add-btn {
-            padding: 8px 15px;
-            background: #13678A;
+        .add-color-btn {
+            padding: 10px 15px;
+            background: #45C4B0;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: background 0.3s;
         }
 
-        .add-btn:hover {
-            background: #0d4f6a;
+        .add-color-btn:hover {
+            background: #36a897;
         }
 
         .notification {
@@ -92,100 +220,214 @@
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 15px 25px;
+            border-radius: 8px;
             opacity: 0;
             transition: opacity 0.3s;
-            z-index: 100;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         .notification.show {
             opacity: 1;
         }
 
-        .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 3px 6px;
-            font-size: 10px;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s;
+        .empty-palette {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0a0;
+            font-style: italic;
         }
 
-        .color:hover .delete-btn {
-            opacity: 1;
+        @media (max-width: 768px) {
+            .palettes-container {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Paleta de Colores</h1>
+    <div class="container">
+        <header>
+            <h1>Gestor de Paletas de Colores</h1>
+            <p class="subtitle">Crea y gestiona múltiples paletas de colores. Todos los datos se guardan localmente en
+                tu navegador.</p>
+        </header>
 
-    <div class="controls">
-        <input type="color" id="colorPicker" class="color-input">
-        <button id="addColorBtn" class="add-btn">Agregar Color</button>
+        <div class="controls">
+            <button id="addPaletteBtn" class="btn btn-primary">
+                <i>+</i> Nueva Paleta
+            </button>
+            <button id="exportAllBtn" class="btn btn-secondary">
+                <i>↓</i> Exportar Todas las Paletas
+            </button>
+        </div>
+
+        <div id="palettesContainer" class="palettes-container">
+            <!-- Las paletas se generarán dinámicamente aquí -->
+        </div>
     </div>
 
-    <div id="palette" class="container"></div>
-
-    <div id="notification" class="notification">¡Color copiado!</div>
+    <div id="notification" class="notification"></div>
 
     <script>
-        console.log("Cargado");
-
-        // Obtener colores del localStorage o usar valores por defecto
-        let colors = JSON.parse(localStorage.getItem('colorPalette')) || [
-            "#9AEBA3",
-            "#DAFDBA",
-            "#45C4B0",
-            "#13678A",
-            "#012030"
+        // Inicializar paletas desde localStorage o con valores por defecto
+        let palettes = JSON.parse(localStorage.getItem('colorPalettes')) || [
+            {
+                id: 1,
+                name: "Paleta Principal",
+                colors: ["#9AEBA3", "#DAFDBA", "#45C4B0", "#13678A", "#012030"]
+            }
         ];
 
-        const paletteContainer = document.getElementById('palette');
-        const colorPicker = document.getElementById('colorPicker');
-        const addColorBtn = document.getElementById('addColorBtn');
+        let nextPaletteId = palettes.length > 0 ? Math.max(...palettes.map(p => p.id)) + 1 : 1;
+
+        const palettesContainer = document.getElementById('palettesContainer');
+        const addPaletteBtn = document.getElementById('addPaletteBtn');
+        const exportAllBtn = document.getElementById('exportAllBtn');
         const notification = document.getElementById('notification');
 
-        // Función para renderizar la paleta
-        function renderPalette() {
-            paletteContainer.innerHTML = '';
+        // Función para renderizar todas las paletas
+        function renderPalettes() {
+            palettesContainer.innerHTML = '';
 
-            colors.forEach((color, index) => {
-                const div = document.createElement('div');
-                div.classList.add('color');
-                div.style.backgroundColor = color;
-                div.title = color;
+            if (palettes.length === 0) {
+                palettesContainer.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <h3>No hay paletas creadas</h3>
+                        <p>Haz clic en "Nueva Paleta" para crear tu primera paleta de colores.</p>
+                    </div>
+                `;
+                return;
+            }
 
-                const copyBtn = document.createElement('button');
-                copyBtn.classList.add('copy-btn');
-                copyBtn.textContent = 'Copiar';
-                copyBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    copyToClipboard(color);
-                });
+            palettes.forEach(palette => {
+                const paletteElement = document.createElement('div');
+                paletteElement.classList.add('palette');
+                paletteElement.innerHTML = `
+                    <div class="palette-header">
+                        <h3 class="palette-title">${palette.name}</h3>
+                        <div class="palette-controls">
+                            <button class="rename-palette" title="Renombrar paleta">✏️</button>
+                            <button class="export-palette" title="Exportar paleta">📤</button>
+                            <button class="delete-palette" title="Eliminar paleta">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="colors-container" id="colors-${palette.id}">
+                        ${palette.colors.length > 0 ?
+                        palette.colors.map(color => `
+                                <div class="color" style="background-color: ${color};" title="${color}">
+                                    <div class="color-actions">
+                                        <button class="copy-color">Copiar</button>
+                                        <button class="delete-color">Eliminar</button>
+                                    </div>
+                                </div>
+                            `).join('') :
+                        '<div class="empty-palette">No hay colores en esta paleta</div>'
+                    }
+                    </div>
+                    <div class="add-color-form">
+                        <input type="color" class="color-input" id="color-picker-${palette.id}" value="#45C4B0">
+                        <button class="add-color-btn" data-palette="${palette.id}">Agregar Color</button>
+                    </div>
+                `;
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.classList.add('delete-btn');
-                deleteBtn.textContent = 'X';
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteColor(index);
-                });
+                palettesContainer.appendChild(paletteElement);
 
-                div.appendChild(copyBtn);
-                div.appendChild(deleteBtn);
-                paletteContainer.appendChild(div);
+                // Añadir event listeners para esta paleta
+                addPaletteEventListeners(palette.id);
             });
 
             // Guardar en localStorage
-            localStorage.setItem('colorPalette', JSON.stringify(colors));
+            localStorage.setItem('colorPalettes', JSON.stringify(palettes));
+        }
+
+        // Función para añadir event listeners a una paleta
+        function addPaletteEventListeners(paletteId) {
+            const paletteIndex = palettes.findIndex(p => p.id === paletteId);
+            if (paletteIndex === -1) return;
+
+            // Botón para agregar color
+            document.querySelector(`.add-color-btn[data-palette="${paletteId}"]`).addEventListener('click', () => {
+                const colorInput = document.getElementById(`color-picker-${paletteId}`);
+                const newColor = colorInput.value.toUpperCase();
+
+                if (!palettes[paletteIndex].colors.includes(newColor)) {
+                    palettes[paletteIndex].colors.push(newColor);
+                    renderPalettes();
+                    showNotification('Color agregado a la paleta');
+                } else {
+                    showNotification('Este color ya existe en la paleta');
+                }
+            });
+
+            // Botones de copiar color
+            document.querySelectorAll(`#colors-${paletteId} .copy-color`).forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const color = e.target.closest('.color').style.backgroundColor;
+                    copyToClipboard(rgbToHex(color));
+                });
+            });
+
+            // Botones de eliminar color
+            document.querySelectorAll(`#colors-${paletteId} .delete-color`).forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const colorElement = e.target.closest('.color');
+                    const color = rgbToHex(colorElement.style.backgroundColor);
+
+                    palettes[paletteIndex].colors = palettes[paletteIndex].colors.filter(c => c !== color);
+                    renderPalettes();
+                    showNotification('Color eliminado de la paleta');
+                });
+            });
+
+            // Botón de renombrar paleta
+            document.querySelector(`#colors-${paletteId}`).closest('.palette').querySelector('.rename-palette').addEventListener('click', () => {
+                const newName = prompt('Nuevo nombre para la paleta:', palettes[paletteIndex].name);
+                if (newName && newName.trim() !== '') {
+                    palettes[paletteIndex].name = newName.trim();
+                    renderPalettes();
+                    showNotification('Paleta renombrada');
+                }
+            });
+
+            // Botón de exportar paleta
+            document.querySelector(`#colors-${paletteId}`).closest('.palette').querySelector('.export-palette').addEventListener('click', () => {
+                exportPalette(paletteId);
+            });
+
+            // Botón de eliminar paleta
+            document.querySelector(`#colors-${paletteId}`).closest('.palette').querySelector('.delete-palette').addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que quieres eliminar esta paleta?')) {
+                    palettes = palettes.filter(p => p.id !== paletteId);
+                    renderPalettes();
+                    showNotification('Paleta eliminada');
+                }
+            });
+        }
+
+        // Función para convertir RGB a HEX
+        function rgbToHex(rgb) {
+            // Si ya es un valor HEX, devolverlo
+            if (rgb.startsWith('#')) return rgb.toUpperCase();
+
+            // Convertir RGB a HEX
+            const rgbValues = rgb.match(/\d+/g);
+            if (!rgbValues || rgbValues.length < 3) return '#000000';
+
+            const r = parseInt(rgbValues[0]).toString(16).padStart(2, '0');
+            const g = parseInt(rgbValues[1]).toString(16).padStart(2, '0');
+            const b = parseInt(rgbValues[2]).toString(16).padStart(2, '0');
+
+            return `#${r}${g}${b}`.toUpperCase();
         }
 
         // Función para copiar al portapapeles
@@ -207,26 +449,63 @@
             }, 2000);
         }
 
-        // Función para agregar color
-        function addColor() {
-            const newColor = colorPicker.value;
-            if (!colors.includes(newColor)) {
-                colors.push(newColor);
-                renderPalette();
+        // Función para exportar una paleta
+        function exportPalette(paletteId) {
+            const palette = palettes.find(p => p.id === paletteId);
+            if (!palette) return;
+
+            const exportData = {
+                name: palette.name,
+                colors: palette.colors
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `${palette.name.replace(/\s+/g, '_')}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            showNotification('Paleta exportada');
+        }
+
+        // Función para exportar todas las paletas
+        function exportAllPalettes() {
+            if (palettes.length === 0) {
+                showNotification('No hay paletas para exportar');
+                return;
             }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(palettes, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "todas_las_paletas.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            showNotification('Todas las paletas exportadas');
         }
 
-        // Función para eliminar color
-        function deleteColor(index) {
-            colors.splice(index, 1);
-            renderPalette();
-        }
+        // Event listeners globales
+        addPaletteBtn.addEventListener('click', () => {
+            const paletteName = prompt('Nombre de la nueva paleta:', `Paleta ${nextPaletteId}`);
+            if (paletteName && paletteName.trim() !== '') {
+                palettes.push({
+                    id: nextPaletteId++,
+                    name: paletteName.trim(),
+                    colors: []
+                });
+                renderPalettes();
+                showNotification('Nueva paleta creada');
+            }
+        });
 
-        // Event listeners
-        addColorBtn.addEventListener('click', addColor);
+        exportAllBtn.addEventListener('click', exportAllPalettes);
 
-        // Renderizar la paleta inicial
-        renderPalette();
+        // Renderizar las paletas al cargar la página
+        renderPalettes();
     </script>
 </body>
 
