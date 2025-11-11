@@ -197,7 +197,7 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
                                 />
                                 <Button
                                     color="success"
-                                    text="Agregar"
+                                    icon={<Plus />}
                                     onClick={() => addColorToSection(sectionId, currentNewColor)}
                                 />
                             </div>
