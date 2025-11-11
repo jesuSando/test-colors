@@ -8,6 +8,7 @@ const LOCAL_KEY = "palettes";
 
 export default function HomePage() {
   const [palettes, setPalettes] = useState([]);
+  const [importMode, setImportMode] = useState("add"); // "add" o "replace"
 
   useEffect(() => {
     const raw = localStorage.getItem(LOCAL_KEY);
@@ -95,11 +96,33 @@ export default function HomePage() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed)) {
-        alert("El JSON debe ser un array de paletas.");
-        return;
+
+      let newPalettes;
+
+      if (importMode === "replace") {
+        // Reemplazar todas las paletas
+        if (!Array.isArray(parsed)) {
+          alert("El JSON debe ser un array de paletas para reemplazar todo.");
+          return;
+        }
+        newPalettes = parsed;
+      } else {
+        // Agregar paleta(s) a las existentes
+        if (Array.isArray(parsed)) {
+          // Si es un array, agregar todas las paletas
+          newPalettes = [...palettes, ...parsed];
+        } else {
+          // Si es un objeto individual, agregarlo como paleta
+          newPalettes = [...palettes, parsed];
+        }
       }
-      savePalettes(parsed);
+
+      // Actualizar IDs para evitar duplicados
+      newPalettes = updatePaletteIds(newPalettes);
+
+      savePalettes(newPalettes);
+      alert(importMode === "replace" ? "Todas las paletas han sido reemplazadas." : "Paleta(s) agregada(s) correctamente.");
+
     } catch (err) {
       console.error(err);
       alert("Error leyendo el archivo JSON.");
@@ -108,10 +131,48 @@ export default function HomePage() {
     }
   };
 
+  // Función para actualizar IDs y evitar duplicados
+  const updatePaletteIds = (palettesArray) => {
+    const idMap = new Map();
+
+    return palettesArray.map(palette => {
+      // Generar nuevo ID si ya existe
+      if (idMap.has(palette.id) || palettes.some(p => p.id === palette.id)) {
+        palette.id = Date.now() + Math.random();
+      }
+      idMap.set(palette.id, true);
+
+      // Actualizar IDs de secciones
+      const sectionIdMap = new Map();
+      palette.sections = palette.sections?.map(section => {
+        if (sectionIdMap.has(section.id)) {
+          section.id = Date.now() + Math.random();
+        }
+        sectionIdMap.set(section.id, true);
+        return section;
+      }) || [];
+
+      return palette;
+    });
+  };
+
   return (
     <main>
-      <nav className="bg-(--color-dark) p-5 flex gap-3 items-center justify-between">
-        <div className="flex gap-3">
+      <nav className="bg-(--color-dark) p-5 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="flex gap-3 items-center">
+          {/* Selector de modo de importación */}
+          <div className="flex items-center gap-2 text-white">
+            <span className="text-sm">Importar:</span>
+            <select
+              value={importMode}
+              onChange={(e) => setImportMode(e.target.value)}
+              className="bg-gray-700 text-white px-2 py-1 rounded text-sm border border-gray-600"
+            >
+              <option value="add">Agregar</option>
+              <option value="replace">Reemplazar todo</option>
+            </select>
+          </div>
+
           <label>
             <input type="file" accept="application/json" onChange={importJSON} className="hidden" id="import-file" />
             <Button
@@ -154,7 +215,9 @@ export default function HomePage() {
 
       <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
         {palettes.length === 0 && (
-          <div className="col-span-full text-center text-gray-400">No hay paletas. Agrega una nueva.</div>
+          <div className="col-span-full text-center text-gray-400">
+            No hay paletas. Agrega una nueva o importa un archivo JSON.
+          </div>
         )}
 
         {palettes.map((palette) => (

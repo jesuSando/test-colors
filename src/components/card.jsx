@@ -223,9 +223,6 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
                 )}
 
                 <div className="flex w-full items-center justify-center gap-5">
-                    <Button color="warning" text="Importar Secciones" onClick={() => {
-                        alert("Importar por paleta no implementado (usa Importar JSON global)");
-                    }} />
                     <Button color="success" text="Exportar Secciones" onClick={() => {
                         const blob = new Blob([JSON.stringify(localPalette, null, 2)], { type: "application/json" });
                         const url = URL.createObjectURL(blob);
