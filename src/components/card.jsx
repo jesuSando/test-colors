@@ -1,9 +1,9 @@
 "use client";
-import { Plus, Edit, Trash2, Copy, Check, ChevronDown, ChevronUp, Save, X } from "lucide-react";
+import { Plus, Trash2, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
 /**
- * Card component ahora recibe:
+ * Card component:
  * - palette: { id, title, sections }
  * - onUpdatePalette(updatedPalette)
  * - onDeletePalette(paletteId)
@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 
 export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
     const [expandedSections, setExpandedSections] = useState({});
-    const [editingSection, setEditingSection] = useState(null);
     const [newColorInputs, setNewColorInputs] = useState({});
     const [localPalette, setLocalPalette] = useState(palette);
 
@@ -33,12 +32,13 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
         const newSection = { id, title: "Nueva Sección", colors: [] };
         const updated = { ...localPalette, sections: [...(localPalette.sections || []), newSection] };
         setAndSync(updated);
-        setEditingSection(id);
+        // no focus automático aquí, pero el input ya estará editable
     };
 
     const updateSectionTitle = (sectionId, newTitle) => {
+        const safeTitle = (newTitle || "").trim();
         const updatedSections = (localPalette.sections || []).map(section =>
-            section.id === sectionId ? { ...section, title: newTitle } : section
+            section.id === sectionId ? { ...section, title: safeTitle } : section
         );
         setAndSync({ ...localPalette, sections: updatedSections });
     };
@@ -65,17 +65,6 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
         setAndSync({ ...localPalette, sections: updatedSections });
     };
 
-    const startEditing = (section) => {
-        setEditingSection(section.id);
-    };
-
-    const saveEditing = (sectionId, newTitle) => {
-        updateSectionTitle(sectionId, newTitle);
-        setEditingSection(null);
-    };
-
-    const cancelEditing = () => setEditingSection(null);
-
     const handleNewColorChange = (sectionId, value) => {
         setNewColorInputs(prev => ({ ...prev, [sectionId]: value }));
     };
@@ -93,12 +82,13 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
     return (
         <div className="rounded-xl overflow-hidden border border-white bg-gray-800">
             <div className="bg-(--color-dark) flex flex-col md:flex-row items-start md:items-center justify-between gap-5 py-5 px-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full">
                     <input
                         type="text"
                         value={localPalette.title || ""}
                         onChange={(e) => updatePaletteTitle(e.target.value)}
-                        className="px-2 py-1 bg-transparent text-white font-bold text-lg border border-transparent focus:border-sky-500 rounded"
+                        placeholder="Título de la paleta"
+                        className="px-2 py-1 bg-transparent text-white font-bold text-2xl border border-transparent focus:border-sky-500 rounded w-full"
                     />
                 </div>
 
@@ -122,48 +112,38 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
                 {(localPalette.sections || []).map((section, sectionIndex) => {
                     const sectionId = section.id ?? sectionIndex;
                     const isExpanded = !!expandedSections[sectionId];
-                    const colorsToShow = isExpanded ? section.colors : section.colors.slice(0, 5);
+                    const colorsToShow = isExpanded ? section.colors : (section.colors || []).slice(0, 5);
                     const hasMoreColors = (section.colors?.length || 0) > 5;
-                    const isEditing = editingSection === sectionId;
                     const currentNewColor = newColorInputs[sectionId] ?? "#ffffff";
 
                     return (
                         <div key={sectionId} className="flex flex-col gap-3 p-4 border border-gray-600 rounded-lg">
-                            <div className="flex items-center justify-between">
-                                {isEditing ? (
-                                    <SectionTitleInput
-                                        section={section}
-                                        onSave={saveEditing}
-                                        onCancel={cancelEditing}
-                                    />
-                                ) : (
-                                    <h3 className="font-semibold text-2xl text-white">{section.title}</h3>
-                                )}
+                            <div className="flex items-center justify-between gap-3">
+                                <input
+                                    type="text"
+                                    value={section.title || ""}
+                                    onChange={(e) => updateSectionTitle(sectionId, e.target.value)}
+                                    onBlur={(e) => {
+                                        if (!(e.target.value || "").trim()) updateSectionTitle(sectionId, "Nueva Sección");
+                                    }}
+                                    className="w-10 py-1 bg-transparent text-white font-semibold text-xl border border-transparent focus:border-sky-500 rounded flex-1"
+                                    placeholder="Título de sección"
+                                />
 
                                 <div className="flex flex-col items-center justify-center gap-2">
-                                    {!isEditing && (
-                                        <div className="flex w-full justify-end items-center gap-3">
-                                            <button
-                                                onClick={() => startEditing(section)}
-                                                className="p-2 text-blue-400 hover:text-blue-100 bg-sky-500/30 hover:bg-sky-700/30 rounded-full cursor-pointer"
-                                                title="Editar título"
-                                            >
-                                                <Edit size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => deleteSection(sectionId)}
-                                                className="p-2 text-red-400 hover:text-red-100 bg-red-500/30 hover:bg-red-700/30 rounded-full cursor-pointer"
-                                                title="Eliminar sección"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div className="flex w-full justify-end items-center">
+                                        <Button
+                                            color="error"
+                                            icon={<Trash2 />}
+                                            title="Eliminar sección"
+                                            onClick={() => deleteSection(sectionId)}
+                                        />
+                                    </div>
 
                                     {hasMoreColors && (
                                         <button
                                             onClick={() => toggleSection(sectionId)}
-                                            className="flex items-center gap-1 text-sm text-white hover:text-sky-500 font-medium cursor-pointer"
+                                            className="flex items-center gap-1 text-sm text-white hover:text-sky-500 font-medium cursor-pointer mt-2"
                                         >
                                             {isExpanded ? (
                                                 <>
@@ -210,6 +190,7 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
                                         onRemove={() => removeColorFromSection(sectionId, colorIndex)}
                                     />
                                 ))}
+
                                 {(section.colors || []).length === 0 && (
                                     <p className="text-gray-400 text-sm">No hay colores en esta sección</p>
                                 )}
@@ -234,47 +215,6 @@ export default function Card({ palette, onUpdatePalette, onDeletePalette }) {
                     }} />
                 </div>
             </div>
-        </div>
-    );
-}
-
-/* SectionTitleInput - formulario de editar título de sección */
-function SectionTitleInput({ section, onSave, onCancel }) {
-    const [editedTitle, setEditedTitle] = useState(section.title || "");
-
-    useEffect(() => setEditedTitle(section.title || ""), [section.title]);
-
-    const handleSave = () => onSave(section.id, editedTitle);
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') handleSave();
-        else if (e.key === 'Escape') onCancel();
-    };
-
-    return (
-        <div className="flex items-center gap-2">
-            <input
-                type="text"
-                value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="px-2 py-1 bg-gray-700 text-white rounded border border-gray-600"
-                autoFocus
-            />
-            <button
-                onClick={handleSave}
-                className="p-2 text-green-400 hover:text-green-100 bg-emerald-500/30 hover:bg-emerald-700/30 rounded-full cursor-pointer"
-                title="Guardar"
-            >
-                <Save size={16} />
-            </button>
-            <button
-                onClick={onCancel}
-                className="p-2 text-red-400 hover:text-red-100 bg-red-500/30 hover:bg-red-700/30 rounded-full cursor-pointer"
-                title="Cancelar"
-            >
-                <X size={16} />
-            </button>
         </div>
     );
 }

@@ -20,11 +20,10 @@ export default function HomePage() {
         setPalettes([]);
       }
     } else {
-      // defaults (ejemplo)
       const defaultPalettes = [
         {
           id: Date.now(),
-          title: "Paleta 1 - Naturaleza",
+          title: "Paleta 1",
           sections: [
             {
               id: 1,
@@ -40,12 +39,12 @@ export default function HomePage() {
         },
         {
           id: Date.now() + 1,
-          title: "Paleta 2 - Atardecer",
+          title: "Paleta 2",
           sections: [
             {
               id: 11,
               title: "Primarios",
-              colors: ["#FFB347", "#FFCC33", "#FF7E5F", "#FEB47B"]
+              colors: ["#FF0000", "#FFFF00", "#0000FF", "#FFFFFF"]
             }
           ]
         }
